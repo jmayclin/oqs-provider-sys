@@ -1,0 +1,11 @@
+[package]
+name = "liboqs-provider-sys"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+oqs-sys = {path = "/home/ubuntu/workspace/liboqs-rust/oqs-sys", features = ["vendored"]}
+openssl-sys = {version = "0.9", features = ["vendored"]}
+
+[build-dependencies]
+cmake = "0.1"
