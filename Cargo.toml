@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-oqs-sys = {path = "/home/ubuntu/workspace/liboqs-rust/oqs-sys", features = ["vendored"]}
+oqs-sys = {path = "/home/ubuntu/workspace/liboqs-rust/oqs-sys", features = ["vendored", "openssl"]}
 openssl-sys = {version = "0.9", features = ["vendored"]}
 
 [build-dependencies]

@@ -70,29 +70,51 @@ fn main() {
 
     // they are silly gooses and their roots are at different levels
 
+    let mut config = cmake::Config::new("oqs-provider");
+    config.profile("Release");
+
     // why is this DEP_OQS_ROOT and not DEP_OQS_SYS_ROOT
     // who sets this?
     // {DEP_OQS_ROOT}/build/lib
     // {DEP_OQS_ROOT}/build/include
     let oqs_root = env::var("DEP_OQS_ROOT").expect("vendored liboqs must export root");
-    //let oqs_install = format!("{oqs_root}/build/");
-
-
-    let openssl_root = env::var("DEP_OPENSSL_ROOT").expect("vendored liboqs must export root");
-
-    // this is relative from the root of the crate
-
     env::set_var("liboqs_DIR", oqs_root);
-    let mut config = cmake::Config::new("oqs-provider");
-    config.profile("Release");
+    
+    //let oqs_install = format!("{oqs_root}/build/");
+    
+    
+    let openssl_root = env::var("DEP_OPENSSL_ROOT").expect("vendored liboqs must export root");
     config.define("OPENSSL_ROOT_DIR", openssl_root);
+    
+    config.define("OQS_PROVIDER_BUILD_STATIC", "ON");
+
+    config.very_verbose(true);
     let outdir = config.build();
+    println!("cargo:warning={:?}", outdir);
+
+    //let outdir = config.build_target("oqs").build();
+    // I think it's showing up in both out/build/lib and build/lib
+    let outdir = config.build();
+    let libdir = outdir.join("lib");
+    println!("cargo:rustc-link-search=native={}", libdir.display());
+    println!("cargo:rustc-link-lib=static=oqsprovider");
+
+    // // lib is put into $outdir/build/lib
+    // let mut libdir = outdir.join("build").join("lib");
+    // if cfg!(windows) {
+    //     libdir.push("Release");
+    //     // Static linking doesn't work on Windows
+    //     println!("cargo:rustc-link-lib=oqs");
+    // } else {
+    //     // Statically linking makes it easier to use the sys crate
+    //     println!("cargo:rustc-link-lib=static=oqs");
+    // }
+    // println!("cargo:rustc-link-search=native={}", libdir.display());
 
     // lib is put into $outdir/build/lib
     //let mut libdir = outdir.join("build").join("lib");
 
     // Statically linking makes it easier to use the sys crate
-    println!("cargo:rustc-link-lib=static=oqs-provider");
 
     //build_from_source();
 }
