@@ -1,4 +1,8 @@
+#![allow(non_upper_case_globals)]
 use std::ffi::{c_char, c_int, c_void};
+
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
@@ -105,7 +109,7 @@ mod tests {
 
 
             } else {
-                panic!("laoding failed")
+                panic!("loading failed")
             }
 
 

@@ -8,4 +8,5 @@ oqs-sys = {path = "/home/ubuntu/workspace/liboqs-rust/oqs-sys", features = ["ven
 openssl-sys = {version = "0.9", features = ["vendored"]}
 
 [build-dependencies]
+bindgen = "0.71.1"
 cmake = "0.1"
