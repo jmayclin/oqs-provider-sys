@@ -1,3 +1,16 @@
+//! This build script has two primary responsibilities, building oqs-provider and
+//! generating the rust bindings for oqs-provider
+//! 
+//! ### building oqs provider
+//! 1. locate openssl and liboqs dependencies of the oqs-provider
+//! 2. configure the oqs-provider cmake project with those dependencies
+//! 3. build the oqs-provider cmake project
+//! 4. link the rust application with the resulting artifact.
+//! 
+//! ### generating the rust bindings
+//! The build script will then run bindgen to expose the symbols of the oqs-provider
+//! library as a rust crate.
+
 use std::{env, path::{Path, PathBuf}};
 
 fn build_from_source() -> PathBuf {
@@ -43,17 +56,25 @@ fn main() {
     //> the variables "OPENSSL_ROOT_DIR" and "liboqs_DIR". See [CONFIGURE.md](CONFIGURE.md)
     //> for details.
 
-    //> ### OPENSSL_ROOT_DIR
-    //> Defines a non-standard location for an OpenSSL(v3) installation via `cmake` define.
-    //> By default this value is unset, requiring presence of an OpenSSL3 installation
-    //> in a standard OS deployment location.
+    for (key, value) in env::vars() {
+        eprintln!("{key} = {value}");
+    }
 
-    //> ### OQS_PROVIDER_BUILD_STATIC
-    //> By setting `-DOQS_PROVIDER_BUILD_STATIC=ON` at compile-time, oqs-provider can be
-    //> compiled as a static library (`oqs-provider.a`).
-    //> When built as a static library, the name of the provider entrypoint is `oqs_provider_init`.
-    //> The provider can be added using the [`OSSL_PROVIDER_add_builtin`](https://www.openssl.org/docs/man3.1/man3/OSSL_PROVIDER_add_builtin.html)
-    //> function:
+
+    // they are silly gooses and their roots are at different levels
+
+    // Configure a cmake project using the CMakeLists.txt located at 
+    // <CRATE_ROOT>/oqs-provider/CMakeLists.txt, and set it to the "Release" build
+    // profile.
+    let mut config = cmake::Config::new("oqs-provider");
+    config.profile("Release");
+
+    // TODO: why is this DEP_OQS_ROOT and not DEP_OQS_SYS_ROOT
+    // TODO: who sets this?
+    // who sets this?
+    // {DEP_OQS_ROOT}/build/lib
+    // {DEP_OQS_ROOT}/build/include
+
 
     //> ### liboqs_DIR
     //> This environment variable must be set to the location of the `liboqs` installation to be
@@ -63,29 +84,29 @@ fn main() {
     //> This uses the [`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html)
     //> command in `cmake`, which checks for local builds of a package at `<PackageName>_DIR`
 
-    for (key, value) in env::vars() {
-        eprintln!("{key} = {value}");
-    }
-
-
-    // they are silly gooses and their roots are at different levels
-
-    let mut config = cmake::Config::new("oqs-provider");
-    config.profile("Release");
-
-    // why is this DEP_OQS_ROOT and not DEP_OQS_SYS_ROOT
-    // who sets this?
-    // {DEP_OQS_ROOT}/build/lib
-    // {DEP_OQS_ROOT}/build/include
+    // Locate the liboqs installation, which is installed by oqs-sys
+    // https://github.com/open-quantum-safe/liboqs-rust/tree/main/oqs-sys
     let oqs_root = env::var("DEP_OQS_ROOT").expect("vendored liboqs must export root");
     env::set_var("liboqs_DIR", oqs_root);
-    
-    //let oqs_install = format!("{oqs_root}/build/");
-    
-    
+        
+    //> ### OPENSSL_ROOT_DIR
+    //> Defines a non-standard location for an OpenSSL(v3) installation via `cmake` define.
+    //> By default this value is unset, requiring presence of an OpenSSL3 installation
+    //> in a standard OS deployment location.
+
+    // locate the openssl linstallation, which is installed by openssl-sys
+    // https://github.com/sfackler/rust-openssl/tree/master/openssl-sys
     let openssl_root = env::var("DEP_OPENSSL_ROOT").expect("vendored liboqs must export root");
     config.define("OPENSSL_ROOT_DIR", openssl_root);
     
+    //> ### OQS_PROVIDER_BUILD_STATIC
+    //> By setting `-DOQS_PROVIDER_BUILD_STATIC=ON` at compile-time, oqs-provider can be
+    //> compiled as a static library (`oqs-provider.a`).
+    //> When built as a static library, the name of the provider entrypoint is `oqs_provider_init`.
+    //> The provider can be added using the [`OSSL_PROVIDER_add_builtin`](https://www.openssl.org/docs/man3.1/man3/OSSL_PROVIDER_add_builtin.html)
+    //> function:
+    // Static builds are "neater". There is one less thing that can go wrong at
+    // runtime.
     config.define("OQS_PROVIDER_BUILD_STATIC", "ON");
 
     config.very_verbose(true);
@@ -94,7 +115,7 @@ fn main() {
 
     //let outdir = config.build_target("oqs").build();
     // I think it's showing up in both out/build/lib and build/lib
-    let outdir = config.build();
+    // TODO: use out/build/lib or build/lib?
     let libdir = outdir.join("lib");
     println!("cargo:rustc-link-search=native={}", libdir.display());
     println!("cargo:rustc-link-lib=static=oqsprovider");
