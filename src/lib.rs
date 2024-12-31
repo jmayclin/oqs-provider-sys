@@ -1,28 +1,33 @@
 #![allow(non_upper_case_globals)]
 use std::ffi::{c_char, c_int, c_void, CStr, CString};
 
+// These `use` statements are necessary to tell that rust compiler that we need
+// these libraries to be linked, even through no symbols from them are explicitly
+// referenced.
+use openssl_sys as _;
+use oqs_sys as _;
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 // Unfortunately we have to do an itty-bitty lie here. oqs_prov.h does not export
 // the module name, nor does it export the init function.
+
+// This actually has a pretty complicated function signature, but we just forcibly
+// coerce it to a void function, and as long as we are all agreeing on our little
+// lie then this is fine.
 #[link(name = "oqsprovider", kind = "static")]
 extern "C" {
     pub fn oqs_provider_init();
 }
 
-const PROVIDER_NAME_OQS: &'static CStr = c"oqsprovider";
+pub const PROVIDER_NAME_OQS: &'static CStr = c"oqsprovider";
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
 
-struct OSSL_provider_init_fn;
-
-/// https://github.com/openssl/openssl/blob/b85e6f534906f0bf9114386d227e481d2336a0ff/include/openssl/core.h#L193
-/// typedef int (OSSL_provider_init_fn)(const OSSL_CORE_HANDLE *handle,
-///     const OSSL_DISPATCH *in,
-///     const OSSL_DISPATCH **out,
-///     void **provctx);
+// https://github.com/openssl/openssl/blob/b85e6f534906f0bf9114386d227e481d2336a0ff/include/openssl/core.h#L193
+// typedef int (OSSL_provider_init_fn)(const OSSL_CORE_HANDLE *handle,
+//     const OSSL_DISPATCH *in,
+//     const OSSL_DISPATCH **out,
+//     void **provctx);
 
 
 
@@ -121,11 +126,4 @@ mod tests {
         }
     }
 
-    #[test]
-    fn it_works() {
-        let ptr = unsafe {oqs_sys::kem::OQS_KEM_alg_identifier(3)};
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-        assert_eq!(5, 5);
-    }
 }
