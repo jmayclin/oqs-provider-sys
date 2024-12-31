@@ -1,8 +1,16 @@
 #![allow(non_upper_case_globals)]
-use std::ffi::{c_char, c_int, c_void};
+use std::ffi::{c_char, c_int, c_void, CStr, CString};
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
+// Unfortunately we have to do an itty-bitty lie here. oqs_prov.h does not export
+// the module name, nor does it export the init function.
+#[link(name = "oqsprovider", kind = "static")]
+extern "C" {
+    pub fn oqs_provider_init();
+}
+
+const PROVIDER_NAME_OQS: &'static CStr = c"oqsprovider";
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
@@ -16,10 +24,7 @@ struct OSSL_provider_init_fn;
 ///     const OSSL_DISPATCH **out,
 ///     void **provctx);
 
-// liboqs provide entry point
-extern "C" {
-    fn oqs_provider_init();
-}
+
 
 // TODO: This next
 // static int test_group(const OSSL_PARAM params[], void *data) {
