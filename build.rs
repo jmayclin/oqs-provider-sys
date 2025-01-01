@@ -1,68 +1,11 @@
 //! This build script has two primary responsibilities, building oqs-provider and
 //! generating the rust bindings for oqs-provider
-//!
-//! ### building oqs provider
-
-//!
-//! ### generating the rust bindings
-//! The build script will then run bindgen to expose the symbols of the oqs-provider
-//! library as a rust crate.
 
 use std::{
     env,
-    path::{Path, PathBuf}, str::FromStr,
+    path::{Path, PathBuf},
+    str::FromStr,
 };
-
-// fn openssl_root() -> PathDir {
-    
-// }
-
-// fn openssl_headers() -> PathDir {
-
-// }
-
-// fn oqs_root() -> PathDir {
-
-// }
-
-// fn oqs_headers() -> PathDir {
-
-// }
-
-fn build_from_source() -> PathBuf {
-    let mut config = cmake::Config::new("liboqs");
-    config.profile("Release");
-    config.define("OQS_BUILD_ONLY_LIB", "Yes");
-
-    // if cfg!(feature = "openssl") {
-    //     config.define("OQS_USE_OPENSSL", "Yes");
-    //     if cfg!(windows) {
-    //         // Windows doesn't prefix with lib
-    //         println!("cargo:rustc-link-lib=libcrypto");
-    //     } else {
-    //     }
-
-    //     println!("cargo:rerun-if-env-changed=OPENSSL_ROOT_DIR");
-    //     if let Ok(dir) = std::env::var("OPENSSL_ROOT_DIR") {
-    //         let dir = Path::new(&dir).join("lib");
-    //         println!("cargo:rustc-link-search={}", dir.display());
-    //     } else if cfg!(target_os = "windows") || cfg!(target_os = "macos") {
-    //         println!("cargo:warning=You may need to specify OPENSSL_ROOT_DIR or disable the default `openssl` feature.");
-    //     }
-    // } else {
-    //     config.define("OQS_USE_OPENSSL", "No");
-    // }
-
-    let outdir = config.build_target("oqs-provider").build();
-
-    // lib is put into $outdir/build/lib
-    //let mut libdir = outdir.join("build").join("lib");
-
-    // Statically linking makes it easier to use the sys crate
-    println!("cargo:rustc-link-lib=static=oqs-provider");
-
-    outdir
-}
 
 /// build the liboqs-provider, and return the installation path.
 ///
@@ -132,7 +75,8 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
 
     // locate the openssl installation, which is installed by openssl-sys
     // https://github.com/sfackler/rust-openssl/tree/master/openssl-sys
-    let openssl_headers = env::var("DEP_OPENSSL_INCLUDE").expect("vendored liboqs must export root");
+    let openssl_headers =
+        env::var("DEP_OPENSSL_INCLUDE").expect("vendored liboqs must export root");
 
     let header_folder = oqsprovider_install.join("include/oqs-provider");
     // oqs-provider exposes a single header
@@ -144,7 +88,7 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
         .clang_arg(format!("-I{}", openssl_headers))
         .clang_arg(format!("-I{}", oqs_headers.display()))
         // generate bindings for the oqs-provider header
-        .header(provider_header.to_str().unwrap()) 
+        .header(provider_header.to_str().unwrap())
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
@@ -153,7 +97,6 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
         .generate()
         // Unwrap the Result and panic on failure.
         .expect("Unable to generate bindings");
-
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
@@ -165,31 +108,11 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
 
 /// invoke the cmake build for liboqs
 fn main() {
-    for (key, value) in env::vars() {
-        eprintln!("{key} = {value}");
-    }
+    // This is _incredibly_ handy for debugging
+    // for (key, value) in env::vars() {
+    //     eprintln!("{key} = {value}");
+    // }
 
     let oqsprovider_install = build();
     generate_bindings(oqsprovider_install);
-
-    // they are silly gooses and their roots are at different levels
-
-    // // lib is put into $outdir/build/lib
-    // let mut libdir = outdir.join("build").join("lib");
-    // if cfg!(windows) {
-    //     libdir.push("Release");
-    //     // Static linking doesn't work on Windows
-    //     println!("cargo:rustc-link-lib=oqs");
-    // } else {
-    //     // Statically linking makes it easier to use the sys crate
-    //     println!("cargo:rustc-link-lib=static=oqs");
-    // }
-    // println!("cargo:rustc-link-search=native={}", libdir.display());
-
-    // lib is put into $outdir/build/lib
-    //let mut libdir = outdir.join("build").join("lib");
-
-    // Statically linking makes it easier to use the sys crate
-
-    //build_from_source();
 }

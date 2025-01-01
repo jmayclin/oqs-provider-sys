@@ -11,14 +11,6 @@ pub struct Server {
     addr: SocketAddr,
 }
 
-impl Drop for Server {
-    fn drop(&mut self) {
-        if !thread::panicking() {
-            self.handle.take().unwrap().join().unwrap();
-        }
-    }
-}
-
 impl Server {
     pub fn builder() -> Builder {
         let mut ctx = SslContext::builder(SslMethod::tls()).unwrap();
@@ -122,7 +114,7 @@ impl ClientBuilder {
         }
     }
 
-    pub fn connect(self) -> SslStream<TcpStream> {
+    pub fn connect(self) -> Result<SslStream<TcpStream>, Box<dyn std::error::Error>> {
         self.build().builder().connect()
     }
 
@@ -155,11 +147,11 @@ impl ClientSslBuilder {
         &mut self.ssl
     }
 
-    pub fn connect(self) -> SslStream<TcpStream> {
-        let socket = TcpStream::connect(self.addr).unwrap();
-        let mut s = self.ssl.connect(socket).unwrap();
+    pub fn connect(self) -> Result<SslStream<TcpStream>, Box<dyn std::error::Error>> {
+        let socket = TcpStream::connect(self.addr)?;
+        let mut s = self.ssl.connect(socket)?;
         s.read_exact(&mut [0]).unwrap();
-        s
+        Ok(s)
     }
 
     pub fn connect_err(self) {

@@ -1,20 +1,36 @@
-use std::ffi::{c_char, c_int};
+use std::{
+    ffi::{c_char, c_int},
+    io::Write,
+};
 
 use common::Server;
-use openssl::{pkey::Id, ssl::{SslContextBuilder, SslMethod}};
+use openssl::{
+    pkey::Id,
+    ssl::{SslContextBuilder, SslMethod},
+};
 use openssl_sys::{OSSL_PROVIDER_load, OSSL_PROVIDER};
 
 mod common;
 
 extern "C" {
-    fn OSSL_PROVIDER_add_builtin(ctx: *mut openssl_sys::OSSL_LIB_CTX, name: *const c_char, init: unsafe extern "C" fn()) -> c_int;
+    fn OSSL_PROVIDER_add_builtin(
+        ctx: *mut openssl_sys::OSSL_LIB_CTX,
+        name: *const c_char,
+        init: unsafe extern "C" fn(),
+    ) -> c_int;
 }
 
+/// This is almost certainly not thread safe. Should be wrapped in a OnceLock
+/// or some other handy synchronization primitive when it is being used in rust.
 unsafe fn load_provider() -> Result<*mut OSSL_PROVIDER, Box<dyn std::error::Error>> {
     //let lib_ctx = openssl_sys::OSSL_LIB_CTX_new();
     // must be null to load the algorithms into the global context.
     let lib_ctx = std::ptr::null_mut();
-    let res = OSSL_PROVIDER_add_builtin(lib_ctx, oqs_provider_sys::OQS_PROV_NAME, oqs_provider_sys::oqs_provider_init);
+    let res = OSSL_PROVIDER_add_builtin(
+        lib_ctx,
+        oqs_provider_sys::OQS_PROV_NAME,
+        oqs_provider_sys::oqs_provider_init,
+    );
     if res != 1 {
         return Err("unable to add builtin module".into());
     };
@@ -24,43 +40,44 @@ unsafe fn load_provider() -> Result<*mut OSSL_PROVIDER, Box<dyn std::error::Erro
     }
 
     // Load the default provider
+    // This is necessary because it appear that loading the oqs provider will
+    // cause OpenSSL to fallback to _only_ using explicitly loaded providers,
+    // so we have to explicitly load the default provider.
     let default_provider = OSSL_PROVIDER_load(std::ptr::null_mut(), c"default".as_ptr());
     if default_provider.is_null() {
         panic!("Failed to load the default provider");
     }
 
-
     Ok(provider)
 }
 
-// #[test]
-// fn handshake() {
-//     let provider_result = unsafe {load_provider()};
-//     assert!(provider_result.is_ok());
-// }
-
 #[test]
-fn peer_tmp_key_p384() {
-    let propvider = unsafe {load_provider()};
+fn handshakes() {
+    let provider = unsafe { load_provider() };
+    assert!(provider.is_ok());
 
+    // PQ handshake
     {
-        let ctx = SslContextBuilder::new(SslMethod::tls()).unwrap();
+        let mut server = Server::builder();
+        server.ctx().set_groups_list("p256_kyber512").unwrap();
+        let server = server.build();
+
+        let mut client = server.client();
+        client.ctx().set_groups_list("p256_kyber512").unwrap();
+        let s = client.connect().unwrap();
+        let state = s.ssl().state_string();
+        assert_eq!(state, "SSLOK");
     }
 
+    // failed handshake sanity check. No common groups, should fail to negotiate
+    {
+        let mut server = Server::builder();
+        server.ctx().set_groups_list("P-256").unwrap();
+        let server = server.build();
 
-
-    assert!(propvider.is_ok());
-    let mut server = Server::builder();
-    server.ctx().set_groups_list("p256_kyber512").unwrap();
-    let server = server.build();
-    let mut client = server.client();
-    client.ctx().set_groups_list("p256_kyber512").unwrap();
-    let s = client.connect();
-    // peer_tmp_key doesn't appear to work for PQ exchange
-    // let peer_temp = s.ssl().peer_tmp_key().unwrap();
-
-    // assert_ne!(
-    //     peer_temp.ec_key().unwrap().public_key_to_der().unwrap(),
-    //     local_temp.ec_key().unwrap().public_key_to_der().unwrap(),
-    // );
+        let mut client = server.client();
+        client.ctx().set_groups_list("p256_kyber512").unwrap();
+        let s = client.connect();
+        assert!(s.is_err());
+    }
 }
