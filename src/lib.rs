@@ -1,4 +1,4 @@
-use std::ffi::{c_char, c_int, c_void, CStr, CString};
+use std::ffi::{c_char, c_int};
 
 // These `use` statements are necessary to tell that rust compiler that we need
 // these libraries to be linked, even through no symbols from them are explicitly

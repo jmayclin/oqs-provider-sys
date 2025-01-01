@@ -1,13 +1,6 @@
-use std::{
-    ffi::{c_char, c_int},
-    io::Write,
-};
+use std::ffi::{c_char, c_int};
 
 use common::Server;
-use openssl::{
-    pkey::Id,
-    ssl::{SslContextBuilder, SslMethod},
-};
 use openssl_sys::{OSSL_PROVIDER_load, OSSL_PROVIDER};
 
 mod common;

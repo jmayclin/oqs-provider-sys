@@ -3,7 +3,7 @@
 
 use std::{
     env,
-    path::{Path, PathBuf},
+    path::PathBuf,
     str::FromStr,
 };
 
