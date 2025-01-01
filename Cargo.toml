@@ -1,5 +1,5 @@
 [package]
-name = "liboqs-provider-sys"
+name = "oqs-provider-sys"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,3 +10,6 @@ openssl-sys = {version = "0.9", features = ["vendored"]}
 [build-dependencies]
 bindgen = "0.71.1"
 cmake = "0.1"
+
+[dev-dependencies]
+openssl = "*"

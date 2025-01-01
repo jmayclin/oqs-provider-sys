@@ -6,5 +6,10 @@ I forgot to run cargo clean after updating a submodule, and the new submodule di
 ## git submodules are sticky
 If you git update the main body, it won't bring the crate along with it.
 
+# TODO External PRs
+
 ## liboqs-rust
 Needs to install the target rather than just building it for things to be findable from other crates.
+
+## liboqs-provider
+Should expose the init functions and the module name in the header
