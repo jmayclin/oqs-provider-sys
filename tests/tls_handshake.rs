@@ -1,11 +1,15 @@
 use std::ffi::{c_char, c_int};
 
 use common::Server;
-use openssl_sys::{OSSL_PROVIDER_load, OSSL_PROVIDER};
+use openssl_sys::{OSSL_PROVIDER_load};
 
 mod common;
 
 extern "C" {
+    /// This symbol isn't currently exposed in openssl-sys, so define it here
+    /// 
+    /// DANGER: the init function pointer is actually a significantly more complicated
+    /// type, but we are just using this as "dumb function pointer" right now.
     fn OSSL_PROVIDER_add_builtin(
         ctx: *mut openssl_sys::OSSL_LIB_CTX,
         name: *const c_char,
@@ -15,7 +19,7 @@ extern "C" {
 
 /// This is almost certainly not thread safe. Should be wrapped in a OnceLock
 /// or some other handy synchronization primitive when it is being used in rust.
-unsafe fn load_provider() -> Result<*mut OSSL_PROVIDER, Box<dyn std::error::Error>> {
+unsafe fn load_provider() -> Result<(), Box<dyn std::error::Error>> {
     //let lib_ctx = openssl_sys::OSSL_LIB_CTX_new();
     // must be null to load the algorithms into the global context.
     let lib_ctx = std::ptr::null_mut();
@@ -38,10 +42,10 @@ unsafe fn load_provider() -> Result<*mut OSSL_PROVIDER, Box<dyn std::error::Erro
     // so we have to explicitly load the default provider.
     let default_provider = OSSL_PROVIDER_load(std::ptr::null_mut(), c"default".as_ptr());
     if default_provider.is_null() {
-        panic!("Failed to load the default provider");
+        return Err("Failed to load the default provider".into());
     }
 
-    Ok(provider)
+    Ok(())
 }
 
 #[test]

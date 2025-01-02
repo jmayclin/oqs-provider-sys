@@ -7,6 +7,8 @@ use openssl_sys as _;
 use oqs_sys as _;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+pub use ffi::*;
+
 
 // Unfortunately we have to do an itty-bitty lie here. oqs_prov.h does not export
 // the module name, nor does it export the init function.
@@ -29,10 +31,10 @@ extern "C" {
 /// Name of the OQS provider
 pub const OQS_PROV_NAME: *const c_char = c"oqsprovider".as_ptr();
 
-extern "C" {
-    fn OSSL_PROVIDER_add_builtin(
-        ctx: *mut openssl_sys::OSSL_LIB_CTX,
-        name: *const c_char,
-        init: unsafe extern "C" fn(),
-    ) -> c_int;
-}
+// extern "C" {
+//     fn OSSL_PROVIDER_add_builtin(
+//         ctx: *mut openssl_sys::OSSL_LIB_CTX,
+//         name: *const c_char,
+//         init: unsafe extern "C" fn(),
+//     ) -> c_int;
+// }

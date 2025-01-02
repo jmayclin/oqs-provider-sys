@@ -2,9 +2,7 @@
 //! generating the rust bindings for oqs-provider
 
 use std::{
-    env,
-    path::PathBuf,
-    str::FromStr,
+    env, fs, path::PathBuf, str::FromStr
 };
 
 /// build the liboqs-provider, and return the installation path.
@@ -51,15 +49,13 @@ fn build() -> PathBuf {
     // runtime.
     config.define("OQS_PROVIDER_BUILD_STATIC", "ON");
 
-    //config.very_verbose(true);
-    // /home/ubuntu/workspace/liboqs-provider-sys/target/debug/build/liboqs-provider-sys-d409fba8457bd0ca/out
+    // example path: /home/ubuntu/workspace/liboqs-provider-sys/target/debug/build/liboqs-provider-sys-d409fba8457bd0ca/out
     let outdir = config.build();
     println!("cargo:warning={:?}", outdir);
 
-    //let outdir = config.build_target("oqs").build();
-    // I think it's showing up in both out/build/lib and build/lib
-    // TODO: use out/build/lib or out/lib?
-    // I think "out/lib" is the more correct one, and where it is "installed" to
+    // TODO: remove the build directory. Although it shouldn't change the size of
+    // the final artifact? I think?
+
     let libdir = outdir.join("lib");
     println!("cargo:rustc-link-search=native={}", libdir.display());
     println!("cargo:rustc-link-lib=static=oqsprovider");
@@ -87,12 +83,14 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
         // tell bindgen (clang) where to find the openssl & oqs headers
         .clang_arg(format!("-I{}", openssl_headers))
         .clang_arg(format!("-I{}", oqs_headers.display()))
+        //.raw_line(r#"#![allow(unused_imports, non_camel_case_types)]"#)
         // generate bindings for the oqs-provider header
         .header(provider_header.to_str().unwrap())
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .allowlist_item("oqs_prov.*")
+        .generate_comments(false)
         // Finish the builder and generate the bindings.
         .generate()
         // Unwrap the Result and panic on failure.
@@ -101,9 +99,28 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     println!("cargo:warning={:?}", out_path);
-    bindings
-        .write_to_file(out_path.join("bindings.rs"))
-        .expect("Couldn't write bindings!");
+
+    let wrapped_out_path = out_path.join("bindings.rs");
+
+    // Write the generated bindings with a module wrapper
+    // TODO: There has to be a better way to do this, but I can't find one.
+    //     option 1: use #[allow(...)] on top of the include! macro. This doesn't
+    //               work because the generated bindings.rs is still compiled and
+    //               generates warnings.
+    //     option 2: use raw_line and #![allow(...)], this doesn't work because
+    //               of errors about "an inner attribute is not permitted in this context"
+    //               I think it's an issue with the concat macro?
+    //
+    let wrapped_bindings = format!(
+        r#"
+        #[allow(unused_imports, non_camel_case_types, dead_code)]
+        pub mod ffi {{
+            {}
+        }}"#,
+        bindings.to_string()
+    );
+
+    fs::write(&wrapped_out_path, wrapped_bindings).expect("Couldn't write bindings!");
 }
 
 /// invoke the cmake build for liboqs
