@@ -42,10 +42,6 @@ impl S2NExtension for s2n_tls::connection::Connection {
         };
 
         let name_str = unsafe {
-            // SAFETY: The data is null terminated because it is declared as a C
-            //         string literal.
-            // SAFETY: kem_name has a static lifetime because it lives on a const
-            //         struct s2n_kem with file scope.
             CStr::from_ptr(name_bytes).to_str()
         };
 
@@ -82,6 +78,7 @@ fn openssl_server_config() -> Result<openssl::ssl::SslContext, Box<dyn std::erro
     ctx.set_certificate_chain_file("cert.pem").unwrap();
     ctx.set_private_key_file("key.pem", SslFiletype::PEM)
         .unwrap();
+    // https://github.com/open-quantum-safe/oqs-provider/blob/4638c0510271cbec3cd474bf471d386b3363590d/ALGORITHMS.md?plain=1#L37
     ctx.set_groups_list("X25519MLKEM768").unwrap();
     Ok(ctx.build())
 }
