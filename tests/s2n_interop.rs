@@ -19,7 +19,6 @@ impl s2n_tls::callbacks::VerifyHostNameCallback for HostNameHandler {
     }
 }
 
-
 trait S2NExtension {
     fn kem_group(&self) -> Option<&str>;
 }
@@ -62,26 +61,6 @@ impl S2NExtension for s2n_tls::connection::Connection {
     }
 }
 
-// Creates session ticket callback handler
-#[derive(Clone, Default)]
-pub struct OsslSessionTicketStorage {
-    stored_ticket: Arc<Mutex<Option<SslSession>>>,
-}
-
-pub struct OpenSslConfig {
-    config: SslContext,
-    session_ticket_storage: OsslSessionTicketStorage,
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct S2NSessionTicketStorage(Arc<Mutex<Option<Vec<u8>>>>);
-
-pub struct S2NConfig {
-    mode: bench::harness::Mode,
-    config: s2n_tls::config::Config,
-    ticket_storage: S2NSessionTicketStorage,
-}
-
 const CERT_PEM: &[u8] = include_bytes!("../cert.pem");
 const KEY_PEM: &[u8] = include_bytes!("../key.pem");
 
@@ -115,18 +94,9 @@ fn openssl_server_config() -> Result<openssl::ssl::SslContext, Box<dyn std::erro
 fn s2n_client_ossl_server() {
     assert!(unsafe { load_provider().is_ok() });
 
-    let server = OpenSslConfig {
-        config: openssl_server_config().unwrap(),
-        session_ticket_storage: Default::default(),
-    };
-    let server: bench::openssl::OpenSslConfig = unsafe { std::mem::transmute(server) };
+    let server: bench::openssl::OpenSslConfig = openssl_server_config().unwrap().into();
 
-    let client = S2NConfig {
-        mode: bench::harness::Mode::Client,
-        config: s2n_client_config().unwrap(),
-        ticket_storage: Default::default(),
-    };
-    let client: bench::s2n_tls::S2NConfig = unsafe { std::mem::transmute(client) };
+    let client: bench::s2n_tls::S2NConfig = s2n_client_config().unwrap().into();
 
     let mut pair =
         bench::harness::TlsConnPair::<bench::S2NConnection, bench::OpenSslConnection>::from_configs(
