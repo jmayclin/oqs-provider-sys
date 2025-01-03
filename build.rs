@@ -1,9 +1,7 @@
 //! This build script has two primary responsibilities, building oqs-provider and
 //! generating the rust bindings for oqs-provider
 
-use std::{
-    env, fs, path::PathBuf, str::FromStr
-};
+use std::{env, fs, path::PathBuf, str::FromStr};
 
 /// build the liboqs-provider, and return the installation path.
 ///
@@ -117,7 +115,7 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
         pub mod ffi {{
             {}
         }}"#,
-        bindings.to_string()
+        bindings
     );
 
     fs::write(&wrapped_out_path, wrapped_bindings).expect("Couldn't write bindings!");

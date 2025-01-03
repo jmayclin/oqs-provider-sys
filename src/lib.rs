@@ -1,4 +1,4 @@
-use std::ffi::{c_char, c_int};
+use std::ffi::c_char;
 
 // These `use` statements are necessary to tell that rust compiler that we need
 // these libraries to be linked, even through no symbols from them are explicitly
@@ -8,7 +8,6 @@ use oqs_sys as _;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 pub use ffi::*;
-
 
 // Unfortunately we have to do an itty-bitty lie here. oqs_prov.h does not export
 // the module name, nor does it export the init function.

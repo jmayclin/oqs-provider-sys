@@ -1,13 +1,13 @@
 use std::ffi::{c_char, c_int};
 
 use common::Server;
-use openssl_sys::{OSSL_PROVIDER_load};
+use openssl_sys::OSSL_PROVIDER_load;
 
 mod common;
 
 extern "C" {
     /// This symbol isn't currently exposed in openssl-sys, so define it here
-    /// 
+    ///
     /// DANGER: the init function pointer is actually a significantly more complicated
     /// type, but we are just using this as "dumb function pointer" right now.
     fn OSSL_PROVIDER_add_builtin(
