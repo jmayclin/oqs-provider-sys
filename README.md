@@ -1,6 +1,6 @@
-# aluminum-kangaroo-oqs-provider-sys
+# tin-ladybug-oqs-provider-sys
 
-> Note: The "aluminum kangaroo" prefix is a random prefix used to indicate that this crate is not officially associated with the [Open Quantum Safe](https://github.com/open-quantum-safe) project.
+> Note: The "tin ladybug" prefix is a random prefix used to indicate that this crate is not officially associated with the [Open Quantum Safe](https://github.com/open-quantum-safe) project.
 
 This crate provides low level "sys" bindings for the [oqs-provider](https://github.com/open-quantum-safe/oqs-provider). This makes it _relatively_ easy to consume the oqs-provider in a rust application, which allows [rust-openssl](https://github.com/sfackler/rust-openssl) to use PQ algorithms.
 

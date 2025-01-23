@@ -1,3 +1,5 @@
+use tin_ladybug_oqs_provider_sys as oqs_provider_sys;
+
 use std::ffi::{c_char, c_int};
 
 use common::Server;

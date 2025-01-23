@@ -1,4 +1,5 @@
 //! ~~stolen~~ respectfully appropriated from rust-openssl repo
+use tin_ladybug_oqs_provider_sys as oqs_provider_sys;
 
 use std::ffi::{c_char, c_int};
 use std::io::{Read, Write};
