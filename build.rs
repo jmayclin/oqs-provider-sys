@@ -58,6 +58,10 @@ fn build() -> PathBuf {
     println!("cargo:rustc-link-search=native={}", libdir.display());
     println!("cargo:rustc-link-lib=static=oqsprovider");
 
+    //println!("cargo:rustc-link-arg=-fopenmp");
+    // needed for platforms with ancient glibcs
+    println!("cargo:rustc-link-arg=-ldl");
+
     outdir
 }
 
