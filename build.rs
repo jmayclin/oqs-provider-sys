@@ -58,7 +58,10 @@ fn build() -> PathBuf {
     // the final artifact? I think?
 
     let libdir = outdir.join("lib");
+    let libdir64 = outdir.join("lib64");
+
     println!("cargo:rustc-link-search=native={}", libdir.display());
+    println!("cargo:rustc-link-search=native={}", libdir64.display());
     println!("cargo:rustc-link-lib=static=oqsprovider");
 
     //println!("cargo:rustc-link-arg=-fopenmp");
