@@ -47,6 +47,9 @@ fn build() -> PathBuf {
     // runtime.
     config.define("OQS_PROVIDER_BUILD_STATIC", "ON");
 
+    // ancient errors with weird lib dl stuff and bad glibc's
+    config.define("BUILD_TESTING", "OFF");
+
     // example path: /home/ubuntu/workspace/liboqs-provider-sys/target/debug/build/liboqs-provider-sys-d409fba8457bd0ca/out
     let outdir = config.build();
     println!("cargo:warning={:?}", outdir);
@@ -61,7 +64,7 @@ fn build() -> PathBuf {
     //println!("cargo:rustc-link-arg=-fopenmp");
     // needed for platforms with ancient glibcs
     println!("cargo:rustc-link-lib=dylib=dl");
-    
+
     outdir
 }
 
