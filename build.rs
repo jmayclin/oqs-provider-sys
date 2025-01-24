@@ -60,8 +60,8 @@ fn build() -> PathBuf {
 
     //println!("cargo:rustc-link-arg=-fopenmp");
     // needed for platforms with ancient glibcs
-    println!("cargo:rustc-link-arg=-ldl");
-
+    println!("cargo:rustc-link-lib=dylib=dl");
+    
     outdir
 }
 
