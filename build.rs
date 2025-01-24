@@ -134,9 +134,9 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
 /// invoke the cmake build for liboqs
 fn main() {
     // This is _incredibly_ handy for debugging
-    // for (key, value) in env::vars() {
-    //     eprintln!("{key} = {value}");
-    // }
+    for (key, value) in env::vars() {
+        eprintln!("{key} = {value}");
+    }
 
     let oqsprovider_install = build();
     generate_bindings(oqsprovider_install);
