@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-oqs-sys = {git = "https://github.com/jmayclin/liboqs-rust", branch = "cmake-ossl-path-fix", features = ["vendored", "openssl"]}
+oqs-sys = {git = "https://github.com/jmayclin/liboqs-rust", branch = "cmake-from-ossl-sys", features = ["vendored", "openssl"]}
 openssl-sys = {version = "0.9", features = ["vendored"]}
 
 [build-dependencies]
