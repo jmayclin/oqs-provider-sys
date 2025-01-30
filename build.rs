@@ -52,7 +52,7 @@ fn build() -> PathBuf {
 
     // example path: /home/ubuntu/workspace/liboqs-provider-sys/target/debug/build/liboqs-provider-sys-d409fba8457bd0ca/out
     let outdir = config.build();
-    println!("cargo:warning={:?}", outdir);
+    eprintln!("the install path for oqs-provider is {:?}", outdir);
 
     // TODO: remove the build directory. Although it shouldn't change the size of
     // the final artifact? I think?
@@ -71,7 +71,7 @@ fn build() -> PathBuf {
     outdir
 }
 
-fn generate_bindings(oqsprovider_install: PathBuf) {
+fn _generate_bindings(oqsprovider_install: PathBuf) {
     // Locate the liboqs installation, which is installed by oqs-sys
     // https://github.com/open-quantum-safe/liboqs-rust/tree/main/oqs-sys
     let oqs_root = env::var("DEP_OQS_ROOT").expect("vendored liboqs must export root");
@@ -119,16 +119,16 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
     //               of errors about "an inner attribute is not permitted in this context"
     //               I think it's an issue with the concat macro?
     //
-    // let wrapped_bindings = format!(
-    //     r#"
-    //     #[allow(unused_imports, non_camel_case_types, dead_code)]
-    //     pub mod ffi {{
-    //         {}
-    //     }}"#,
-    //     bindings
-    // );
+    let wrapped_bindings = format!(
+        r#"
+        #[allow(unused_imports, non_camel_case_types, dead_code)]
+        pub mod ffi {{
+            {}
+        }}"#,
+        bindings
+    );
 
-    // fs::write(&wrapped_out_path, wrapped_bindings).expect("Couldn't write bindings!");
+    fs::write(&wrapped_out_path, wrapped_bindings).expect("Couldn't write bindings!");
 }
 
 /// invoke the cmake build for liboqs
@@ -138,6 +138,9 @@ fn main() {
         eprintln!("{key} = {value}");
     }
 
-    let oqsprovider_install = build();
-    generate_bindings(oqsprovider_install);
+    // build the oqs provider library and link it
+    let _oqsprovider_install = build();
+    // but we don't actually need the bindings, because we only use two symbols
+    // and the bindgen doesn't name them.
+    // generate_bindings(oqsprovider_install);
 }

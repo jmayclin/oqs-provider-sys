@@ -1,13 +1,13 @@
 [package]
 name = "tin-ladybug-oqs-provider-sys"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 authors = ["maycj"]
 repository = "https://github.com/jmayclin/oqs-provider-sys"
 license = "Apache-2.0"
 
 [dependencies]
-oqs-sys = {git = "https://github.com/open-quantum-safe/liboqs-rust", features = ["vendored_openssl"]}
+oqs-sys = {version = "0.10.1", features = ["vendored_openssl"]}
 openssl-sys = {version = "0.9", features = ["vendored"]}
 
 [build-dependencies]
