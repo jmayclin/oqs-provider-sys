@@ -47,6 +47,9 @@ fn build() -> PathBuf {
     // runtime.
     config.define("OQS_PROVIDER_BUILD_STATIC", "ON");
 
+    // ancient errors with weird lib dl stuff and bad glibc's
+    config.define("BUILD_TESTING", "OFF");
+
     // example path: /home/ubuntu/workspace/liboqs-provider-sys/target/debug/build/liboqs-provider-sys-d409fba8457bd0ca/out
     let outdir = config.build();
     println!("cargo:warning={:?}", outdir);
@@ -55,8 +58,15 @@ fn build() -> PathBuf {
     // the final artifact? I think?
 
     let libdir = outdir.join("lib");
+    let libdir64 = outdir.join("lib64");
+
     println!("cargo:rustc-link-search=native={}", libdir.display());
+    println!("cargo:rustc-link-search=native={}", libdir64.display());
     println!("cargo:rustc-link-lib=static=oqsprovider");
+
+    //println!("cargo:rustc-link-arg=-fopenmp");
+    // needed for platforms with ancient glibcs
+    println!("cargo:rustc-link-lib=dylib=dl");
 
     outdir
 }
@@ -124,9 +134,9 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
 /// invoke the cmake build for liboqs
 fn main() {
     // This is _incredibly_ handy for debugging
-    // for (key, value) in env::vars() {
-    //     eprintln!("{key} = {value}");
-    // }
+    for (key, value) in env::vars() {
+        eprintln!("{key} = {value}");
+    }
 
     let oqsprovider_install = build();
     generate_bindings(oqsprovider_install);
