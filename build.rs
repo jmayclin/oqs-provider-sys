@@ -119,16 +119,16 @@ fn generate_bindings(oqsprovider_install: PathBuf) {
     //               of errors about "an inner attribute is not permitted in this context"
     //               I think it's an issue with the concat macro?
     //
-    let wrapped_bindings = format!(
-        r#"
-        #[allow(unused_imports, non_camel_case_types, dead_code)]
-        pub mod ffi {{
-            {}
-        }}"#,
-        bindings
-    );
+    // let wrapped_bindings = format!(
+    //     r#"
+    //     #[allow(unused_imports, non_camel_case_types, dead_code)]
+    //     pub mod ffi {{
+    //         {}
+    //     }}"#,
+    //     bindings
+    // );
 
-    fs::write(&wrapped_out_path, wrapped_bindings).expect("Couldn't write bindings!");
+    // fs::write(&wrapped_out_path, wrapped_bindings).expect("Couldn't write bindings!");
 }
 
 /// invoke the cmake build for liboqs

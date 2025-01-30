@@ -12,8 +12,8 @@ use oqs_sys as _;
 // TODO: do I actually need to invoke bindgen? I think the answer is no. The only
 // two symbols that I actually use are the provider_init function (why isn't that
 // captured by bindgen?) and the provider name, which also isn't covered by bindgen.
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-pub use ffi::*;
+// include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+// pub use ffi::*;
 
 // Unfortunately we have to do an itty-bitty lie here. oqs_prov.h does not export
 // the module name, nor does it export the init function.
